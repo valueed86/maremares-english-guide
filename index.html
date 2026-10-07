@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel English - Maremares Lesson</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Paleta Oficial Hotel Maremares Lechería */
+            --color-primary: #179b94;        
+            --color-primary-dark: #11756f;   
+            --color-primary-light: #e6f6f5;  
+            --color-gold: #d4af37;           
+            --bg-general: #f4f8f8;           
+            --bg-card: #ffffff;              
+            --text-main: #2c3e50;            
+            
+            /* Colores de estado interactivos */
+            --color-success: #2ecc71;        
+            --color-success-dark: #27ae60;
+            --bg-success-light: #eafaf1;
+            --color-error: #e74c3c;          
+            --color-error-dark: #c0392b;
+            --bg-error-light: #fdedec;
+            
+            /* Grises UI */
+            --color-gray-light: #e5e5e5;
+            --color-gray-medium: #afafaf;
+        }
+
+        /* Fix crucial para el alto en navegadores móviles (Safari/Chrome Mobile) */
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: var(--bg-general);
+            color: var(--text-main);
+            margin: 0;
+            overflow: hidden; /* Evita scroll en todo el documento */
+        }
+        
+        #app {
+            height: 100vh; /* Fallback para navegadores antiguos */
+            height: 100dvh; /* Altura de Viewport Dinámica: ignora barras de navegación móviles */
+        }
+        
+        /* Botones Base 3D */
+        .duo-btn {
+            border-bottom-width: 4px;
+            border-color: var(--color-gray-light);
+            transition: all 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 800;
+        }
+        .duo-btn:active:not(:disabled) {
+            border-bottom-width: 0px;
+            transform: translateY(4px);
+        }
+        
+        /* Botón Primario (Maremares Turquesa) */
+        .duo-btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary-dark);
+            color: white;
+        }
+        .duo-btn-primary:active:not(:disabled) {
+            border-bottom-width: 0px;
+            transform: translateY(4px);
+            margin-top: 4px;
+        }
+        .duo-btn-primary:disabled {
+            background-color: var(--color-gray-light);
+            border-color: var(--color-gray-light);
+            color: var(--color-gray-medium);
+            cursor: not-allowed;
+        }
+        
+        /* Botones de Estado */
+        .duo-btn-success {
+            background-color: var(--color-success);
+            border-color: var(--color-success-dark);
+            color: white;
+        }
+        .duo-btn-danger {
+            background-color: var(--color-error);
+            border-color: var(--color-error-dark);
+            color: white;
+        }
+        
+        /* Tarjetas de Opciones */
+        .duo-option {
+            background-color: var(--bg-card);
+            border: 2px solid var(--color-gray-light);
+            border-bottom-width: 4px;
+            border-radius: 1rem;
+            transition: all 0.15s ease;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+        .duo-option:active {
+            border-bottom-width: 2px;
+            transform: translateY(2px);
+        }
+        .duo-option:hover:not(.selected) {
+            background-color: #fafdfd;
+            border-color: #c9e9e8;
+        }
+        .duo-option.selected {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary-light);
+            color: var(--color-primary-dark);
+        }
+        
+        /* Check circle dentro de opciones */
+        .check-circle {
+            border: 2px solid var(--color-gray-light);
+            transition: all 0.2s;
+        }
+        .duo-option.selected .check-circle {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary);
+        }
+        
+        /* Burbuja de diálogo */
+        .speech-bubble {
+            position: relative;
+            background-color: var(--bg-card);
+            border: 2px solid var(--color-gray-light);
+            border-radius: 1rem;
+        }
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            transform: translateY(-50%);
+            border-width: 10px 12px 10px 0;
+            border-style: solid;
+            border-color: transparent var(--color-gray-light) transparent transparent;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            border-width: 8px 10px 8px 0;
+            border-style: solid;
+            border-color: transparent var(--bg-card) transparent transparent;
+        }
+        
+        /* Utilidades */
+        .text-gold { color: var(--color-gold); }
+        .bg-gold { background-color: var(--color-gold); }
+        #progress-bar { background-color: var(--color-primary); }
+
+        /* Animación fluida para la tarjeta flotante de feedback */
+        @keyframes slideUpCard {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-feedback {
+            animation: slideUpCard 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="selection:bg-teal-200">
+    <div id="app" class="flex flex-col max-w-2xl mx-auto relative bg-[var(--bg-general)] shadow-2xl shadow-teal-900/5">
+        
+        <!-- HEADER INSTITUCIONAL -->
+        <header class="bg-white border-b-2 border-[var(--color-gray-light)] shadow-sm w-full z-10 flex flex-col shrink-0">
+            <!-- Fila Superior: Marca del Hotel Maremares -->
+            <div class="relative flex flex-col items-center justify-center pt-5 pb-3">
+                <button class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-gray-medium)] hover:text-[var(--text-main)] transition-colors" title="Cerrar lección">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <div class="text-center leading-tight">
+                    <div class="font-black text-xl sm:text-2xl tracking-wide text-[var(--color-primary)] flex items-center justify-center gap-1.5 sm:gap-2">
+                        HOTEL MAREMARES 
+                        <span class="text-[var(--color-gold)] text-lg sm:text-xl tracking-widest mt-0.5">★★★★★</span>
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-gray-medium)] mt-1">
+                        English Training Guide
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fila Inferior: Barra de Progreso y Vidas -->
+            <div class="flex items-center justify-between px-4 sm:px-6 pb-4 pt-1 w-full">
+                <div class="flex-1 mr-4">
+                    <div class="h-4 bg-[var(--color-gray-light)] rounded-full overflow-hidden relative">
+                        <div id="progress-bar" class="absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out w-0">
+                            <!-- Brillo 3D interno -->
+                            <div class="absolute top-1 left-2 right-2 h-1 bg-white/30 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center text-[var(--color-error)] font-bold text-lg whitespace-nowrap">
+                    <svg class="w-6 h-6 mr-1 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    <span id="lives">3</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT (Contenedor scrolleable aislado) -->
+        <main id="main-area" class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col justify-start pt-6 sm:pt-10 overscroll-contain">
+            
+            <!-- Etiqueta Dinámica de Área -->
+            <div id="badge-container" class="mb-4 shrink-0">
+                <span id="area-badge" class="inline-block px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider bg-[var(--color-primary-light)] text-[var(--color-primary-dark)]">
+                    📍 Cargando...
+                </span>
+            </div>
+
+            <!-- Título de la Pregunta -->
+            <h1 id="question-title" class="text-2xl sm:text-3xl font-bold mb-6 text-[var(--text-main)] leading-tight shrink-0">Cargando...</h1>
+            
+            <!-- Contenedor del Diálogo -->
+            <div class="flex items-center mb-8 hidden shrink-0" id="dialogue-container">
+                <div class="text-6xl mr-4 drop-shadow-sm" id="avatar-icon">🧑‍💼</div>
+                <div class="speech-bubble p-4 sm:p-5 text-lg font-semibold shadow-sm flex-1">
+                    <span id="dialogue-text">...</span>
+                </div>
+            </div>
+
+            <!-- Opciones Interactivas (Añadido padding inferior extra para asegurar scroll cómodo al final) -->
+            <div id="options-container" class="grid gap-3 pb-8 sm:pb-4">
+                <!-- Inyectado por JS -->
+            </div>
+        </main>
+
+        <!-- FOOTER: Botones y Tarjeta Flotante de Feedback -->
+        <footer id="action-footer" class="border-t-2 border-[var(--color-gray-light)] bg-[var(--bg-card)] z-20 w-full shrink-0 mt-auto">
+            <div class="max-w-2xl mx-auto w-full p-4 sm:p-6 flex flex-col relative">
+                
+                <!-- Tarjeta Flotante de Feedback (Con márgenes propios) -->
+                <div id="feedback-panel" class="hidden rounded-2xl flex-col justify-center mb-4 sm:mb-5 p-4 sm:p-5 border-2 shadow-sm">
+                    <div class="flex items-center w-full" id="feedback-content">
+                        <div id="feedback-icon" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center mr-3 sm:mr-4 shadow-sm shrink-0"></div>
+                        <div>
+                            <h2 id="feedback-title" class="text-xl sm:text-2xl font-black leading-none">Feedback</h2>
+                            <p id="feedback-message" class="font-bold mt-2 text-[15px] sm:text-base hidden leading-tight"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contenedor Botones (Con márgenes perimetrales preservados) -->
+                <div class="w-full flex justify-between items-center" id="button-container">
+                    <button id="skip-btn" class="font-black text-[var(--color-gray-medium)] uppercase tracking-widest hover:text-[var(--text-main)] transition-colors hidden sm:block">Saltar</button>
+                    <button id="main-action-btn" class="w-full sm:w-auto min-w-[150px] py-3 px-6 rounded-xl text-lg duo-btn duo-btn-primary ml-auto" disabled>
+                        Comprobar
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- DATA DE EJERCICIOS (Contexto Hotel Maremares) ---
+        const exercises = [
+            {
+                area: "📍 Reservación y Check-in",
+                title: "Escoge la respuesta correcta al huésped",
+                dialogue: "Good afternoon. I have a reservation under the name 'Smith'.",
+                avatar: "🧳",
+                options: [
+                    "What do you want, Smith?",
+                    "Welcome, Mr. Smith. Let me check that for you.",
+                    "No reservations today, sorry.",
+                    "I am the receptionist."
+                ],
+                correctAnswer: 1
+            },
+            {
+                area: "🛂 Recepción",
+                title: "¿Cómo se dice '¿Puedo ver su pasaporte, por favor?' en inglés?",
+                dialogue: null,
+                avatar: null,
+                options: [
+                    "Can I see your passport, please?",
+                    "Give me passport now.",
+                    "I want to look your passport.",
+                    "Can you see my passport, please?"
+                ],
+                correctAnswer: 0
+            },
+            {
+                area: "🍽️ Room Service / Restaurante Limoncello",
+                title: "Atiende la solicitud de Room Service",
+                dialogue: "Could you send some extra towels to room 304?",
+                avatar: "📞",
+                options: [
+                    "I don't have towels.",
+                    "Yes, we are going to room 304.",
+                    "Certainly, I'll send them up right away.",
+                    "You already have towels."
+                ],
+                correctAnswer: 2
+            }
+        ];
+
+        // --- ESTADO GLOBAL ---
+        let currentExIndex = 0;
+        let lives = 3;
+        let selectedOptionIndex = null;
+        let state = 'answering'; 
+
+        // --- ELEMENTOS DEL DOM ---
+        const progressBar = document.getElementById('progress-bar');
+        const livesEl = document.getElementById('lives');
+        const mainArea = document.getElementById('main-area');
+        const badgeContainer = document.getElementById('badge-container');
+        const areaBadge = document.getElementById('area-badge');
+        const titleEl = document.getElementById('question-title');
+        const dialogueContainer = document.getElementById('dialogue-container');
+        const dialogueText = document.getElementById('dialogue-text');
+        const avatarIcon = document.getElementById('avatar-icon');
+        const optionsContainer = document.getElementById('options-container');
+        const mainActionBtn = document.getElementById('main-action-btn');
+        const feedbackPanel = document.getElementById('feedback-panel');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const skipBtn = document.getElementById('skip-btn');
+
+        // --- ICONOS SVG ---
+        const checkIconSVG = '<svg class="w-6 h-6 sm:w-7 sm:h-7 text-[var(--color-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+        const xIconSVG = '<svg class="w-6 h-6 sm:w-7 sm:h-7 text-[var(--color-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+        // --- MOTOR DE SONIDO SINTETIZADO (Web Audio API) ---
+        let audioCtx;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now); 
+                    osc.frequency.setValueAtTime(1108.73, now + 0.1); 
+                    
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(120, now + 0.3);
+                    
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.warn("Audio no soportado o bloqueado por el navegador", e);
+            }
+        }
+        
+        function playVictorySound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const notes = [
+                    { f: 523.25, d: 0 },
+                    { f: 659.25, d: 0.15 },
+                    { f: 783.99, d: 0.3 },
+                    { f: 1046.50, d: 0.45 }
+                ];
+                
+                notes.forEach(note => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.value = note.f;
+                    gain.gain.setValueAtTime(0, now + note.d);
+                    gain.gain.linearRampToValueAtTime(0.2, now + note.d + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + note.d + 0.3);
+                    osc.start(now + note.d);
+                    osc.stop(now + note.d + 0.3);
+                });
+            } catch (e) {}
+        }
+
+        // --- LÓGICA PRINCIPAL ---
+        function init() {
+            loadExercise();
+            updateProgress();
+        }
+
+        function loadExercise() {
+            if (currentExIndex >= exercises.length) {
+                showCompletionScreen();
+                return;
+            }
+            state = 'answering';
+            selectedOptionIndex = null;
+            const ex = exercises[currentExIndex];
+
+            resetFooter();
+            
+            mainArea.classList.remove('justify-center');
+            mainArea.classList.add('justify-start', 'pt-6', 'sm:pt-10');
+            
+            if(ex.area) {
+                badgeContainer.style.display = 'block';
+                areaBadge.textContent = ex.area;
+            } else {
+                badgeContainer.style.display = 'none';
+            }
+
+            titleEl.textContent = ex.title;
+
+            if (ex.dialogue) {
+                dialogueContainer.classList.remove('hidden');
+                dialogueText.textContent = ex.dialogue;
+                avatarIcon.textContent = ex.avatar || "🧑‍💼";
+            } else {
+                dialogueContainer.classList.add('hidden');
+            }
+
+            optionsContainer.innerHTML = '';
+            ex.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'duo-option w-full p-4 sm:p-5 text-left text-lg flex justify-between items-center outline-none';
+                btn.innerHTML = `<span>${opt}</span> <div class="w-6 h-6 rounded-full check-circle flex items-center justify-center shrink-0 ml-3"></div>`;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            mainActionBtn.disabled = true;
+            mainActionBtn.textContent = 'Comprobar';
+        }
+
+        function selectOption(idx, btnElement) {
+            if (state !== 'answering') return;
+            selectedOptionIndex = idx;
+            
+            document.querySelectorAll('.duo-option').forEach(btn => {
+                btn.classList.remove('selected');
+                const circle = btn.querySelector('.check-circle');
+                circle.innerHTML = '';
+            });
+
+            btnElement.classList.add('selected');
+            const circle = btnElement.querySelector('.check-circle');
+            circle.innerHTML = '<svg class="w-4 h-4 text-[var(--color-primary-dark)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+
+            mainActionBtn.disabled = false;
+            
+            // Auto-scroll ligero hacia abajo en pantallas pequeñas al seleccionar
+            setTimeout(() => {
+                mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
+            }, 150);
+        }
+
+        function handleMainAction() {
+            if (state === 'answering') {
+                checkAnswer();
+            } else if (state === 'feedback') {
+                currentExIndex++;
+                updateProgress();
+                loadExercise();
+            } else if (state === 'finished') {
+                currentExIndex = 0;
+                lives = 3;
+                livesEl.textContent = lives;
+                init();
+            }
+        }
+
+        function checkAnswer() {
+            const ex = exercises[currentExIndex];
+            const isCorrect = selectedOptionIndex === ex.correctAnswer;
+            state = 'feedback';
+            mainActionBtn.textContent = 'Continuar';
+            
+            skipBtn.style.visibility = 'hidden';
+            
+            feedbackPanel.classList.remove('hidden');
+            feedbackPanel.classList.add('flex', 'animate-feedback');
+
+            if (isCorrect) {
+                playSound('correct');
+                feedbackPanel.style.backgroundColor = 'var(--bg-success-light)';
+                feedbackPanel.style.borderColor = 'var(--color-success)';
+                
+                feedbackTitle.textContent = '¡Excelente!';
+                feedbackTitle.style.color = 'var(--color-success-dark)';
+                feedbackMessage.classList.add('hidden');
+                
+                feedbackIcon.innerHTML = checkIconSVG;
+
+                mainActionBtn.className = 'w-full sm:w-auto min-w-[150px] py-3 px-6 rounded-xl text-lg duo-btn duo-btn-success ml-auto';
+            } else {
+                playSound('wrong');
+                lives--;
+                livesEl.textContent = lives;
+                
+                feedbackPanel.style.backgroundColor = 'var(--bg-error-light)';
+                feedbackPanel.style.borderColor = 'var(--color-error)';
+                
+                feedbackTitle.textContent = 'Respuesta incorrecta';
+                feedbackTitle.style.color = 'var(--color-error-dark)';
+                
+                feedbackMessage.textContent = `Solución correcta: ${ex.options[ex.correctAnswer]}`;
+                feedbackMessage.classList.remove('hidden');
+                feedbackMessage.style.color = 'var(--color-error-dark)';
+                
+                feedbackIcon.innerHTML = xIconSVG;
+
+                mainActionBtn.className = 'w-full sm:w-auto min-w-[150px] py-3 px-6 rounded-xl text-lg duo-btn duo-btn-danger ml-auto';
+                
+                if (lives <= 0) {
+                    setTimeout(() => {
+                        alert("¡Te has quedado sin vidas! Reiniciando lección...");
+                        currentExIndex = 0;
+                        lives = 3;
+                        livesEl.textContent = lives;
+                        loadExercise();
+                        updateProgress();
+                    }, 1200);
+                }
+            }
+        }
+
+        function resetFooter() {
+            feedbackPanel.classList.add('hidden');
+            feedbackPanel.classList.remove('flex', 'animate-feedback');
+            
+            skipBtn.style.visibility = 'visible';
+            
+            mainActionBtn.className = 'w-full sm:w-auto min-w-[150px] py-3 px-6 rounded-xl text-lg duo-btn duo-btn-primary ml-auto';
+        }
+
+        function updateProgress() {
+            const percentage = (currentExIndex / exercises.length) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function showCompletionScreen() {
+            state = 'finished';
+            playVictorySound();
+            
+            mainArea.classList.remove('justify-start', 'pt-6', 'sm:pt-10');
+            mainArea.classList.add('justify-center');
+            badgeContainer.style.display = 'none';
+
+            titleEl.textContent = "¡Lección completada!";
+            
+            dialogueContainer.classList.remove('hidden');
+            avatarIcon.textContent = "🎉";
+            dialogueText.innerHTML = "¡Has dominado el área de <strong>Recepción y Room Service</strong>!";
+            
+            optionsContainer.innerHTML = `
+                <div class="flex justify-center my-8">
+                    <div class="w-36 h-36 bg-gold rounded-full flex items-center justify-center shadow-xl border-4 border-white text-5xl">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+                </div>
+            `;
+            
+            resetFooter();
+            skipBtn.style.visibility = 'hidden'; 
+            mainActionBtn.disabled = false;
+            mainActionBtn.textContent = "Finalizar";
+            mainActionBtn.className = 'w-full sm:w-auto min-w-[150px] py-3 px-6 rounded-xl text-lg duo-btn duo-btn-primary mx-auto z-20 relative';
+            progressBar.style.width = '100%';
+        }
+
+        // EVENT LISTENERS
+        mainActionBtn.addEventListener('click', handleMainAction);
+        skipBtn.addEventListener('click', () => {
+            if (state === 'answering') {
+                selectedOptionIndex = -1; 
+                checkAnswer();
+            }
+        });
+
+        // INICIAR APLICACIÓN
+        init();
+    </script>
+</body>
+</html>
